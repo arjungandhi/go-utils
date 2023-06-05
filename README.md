@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
-[![Go Reference](https://pkg.go.dev/badge/github.com/:user/:repo.svg)](https://pkg.go.dev/github.com/:user/:repo)
-[![Go Report Card](https://goreportcard.com/badge/gojp/goreportcard)](https://goreportcard.com/report/:user/:repo) 
-[![License](https://img.shields.io/github/license/:user/:repo)](https://github.com/:user/:repo/blob/main/LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/arjungandhi/utils.svg)](https://pkg.go.dev/github.com/arjungandhi/utils)
+[![Go Report Card](https://goreportcard.com/badge/gojp/goreportcard)](https://goreportcard.com/report/arjungandhi/utils) 
+[![License](https://img.shields.io/github/license/arjungandhi/utils)](https://github.com/arjungandhi/utils/blob/main/LICENSE)
 
 <br />
 <div align="center">
