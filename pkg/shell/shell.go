@@ -2,8 +2,11 @@ package shell
 
 import (
 	"fmt"
+	fzf "github.com/junegunn/fzf/src"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"syscall"
 )
 
@@ -66,4 +69,46 @@ func Exec(args ...string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+type Searchable interface {
+	String() string
+}
+
+// uses fzf to search for a Searchable
+func FZFSearch(opts []Searchable, initial_search string) (Searchable, error) {
+	fzf_opts, err := fzf.ParseOptions(true, []string{
+		fmt.Sprintf("--query=%s", initial_search),
+		"--delimiter=\t",
+		"--with-nth=2",
+		"--layout=reverse",
+		"-1",
+	})
+
+	// generate our search list
+	for i, opt := range opts {
+		fzf_opts.Input <- fmt.Sprintf("%d\t%s", i, opt.String())
+	}
+
+	// use fzf to find the note we want
+	_, err = fzf.Run(fzf_opts)
+	if err != nil {
+		return nil, err
+	}
+
+	selected := ""
+	for out := range fzf_opts.Output {
+		selected = out
+	}
+
+	selectedIndex := strings.Split(string(selected), "\t")[0]
+
+	// convert the selected string to an int
+	i, err := strconv.Atoi(selectedIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts[i], nil
+
 }
