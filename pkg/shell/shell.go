@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"errors"
 	"fmt"
 	fzf "github.com/junegunn/fzf/src"
 	"os"
@@ -71,34 +72,43 @@ func Exec(args ...string) error {
 	return cmd.Run()
 }
 
-type Searchable interface {
-	String() string
-}
-
 // uses fzf to search for a Searchable
-func FZFSearch(opts []Searchable, initial_search string) (Searchable, error) {
+func FzfSearch[T fmt.Stringer](opts []T, initial_search string) (int, error) {
+	// generate our search list
+	inputChan := make(chan string)
+	go func() {
+		for i, opt := range opts {
+			inputChan <- fmt.Sprintf("%d\t%s", i, opt.String())
+		}
+		close(inputChan)
+	}()
+
+	selected := ""
+	outputChan := make(chan string)
+	go func() {
+		for out := range outputChan {
+			selected = out
+		}
+	}()
+
 	fzf_opts, err := fzf.ParseOptions(true, []string{
 		fmt.Sprintf("--query=%s", initial_search),
 		"--delimiter=\t",
 		"--with-nth=2",
 		"--layout=reverse",
-		"-1",
 	})
 
-	// generate our search list
-	for i, opt := range opts {
-		fzf_opts.Input <- fmt.Sprintf("%d\t%s", i, opt.String())
-	}
+	fzf_opts.Input = inputChan
+	fzf_opts.Output = outputChan
 
 	// use fzf to find the note we want
 	_, err = fzf.Run(fzf_opts)
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 
-	selected := ""
-	for out := range fzf_opts.Output {
-		selected = out
+	if selected == "" {
+		return -1, errors.New("No Option Selected")
 	}
 
 	selectedIndex := strings.Split(string(selected), "\t")[0]
@@ -106,9 +116,8 @@ func FZFSearch(opts []Searchable, initial_search string) (Searchable, error) {
 	// convert the selected string to an int
 	i, err := strconv.Atoi(selectedIndex)
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 
-	return opts[i], nil
-
+	return i, nil
 }
