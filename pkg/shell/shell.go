@@ -3,12 +3,14 @@ package shell
 import (
 	"errors"
 	"fmt"
-	fzf "github.com/junegunn/fzf/src"
 	"os"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
+
+	fzf "github.com/junegunn/fzf/src"
 )
 
 // CheckCommand checks if a command is in the PATH
@@ -20,13 +22,17 @@ func CheckCommand(command string) bool {
 	return true
 }
 
-func OpenInEditor(path string) {
+// OpenInEditor opens the given file in the user's default editor
+func OpenInEditor(paths ...string) {
 	editor, exists := os.LookupEnv("EDITOR")
 	if !exists {
 		editor = "vi"
 	}
 
-	SysExec(editor, path)
+	cmd := []string{editor}
+	cmd = slices.Concat(cmd, paths)
+
+	SysExec(paths...)
 }
 
 // SysExec will check for the existence of the first argument as an
