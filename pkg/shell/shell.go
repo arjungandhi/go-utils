@@ -23,7 +23,7 @@ func CheckCommand(command string) bool {
 }
 
 // OpenInEditor opens the given file in the user's default editor
-func OpenInEditor(paths ...string) {
+func OpenInEditor(paths ...string) error {
 	editor, exists := os.LookupEnv("EDITOR")
 	if !exists {
 		editor = "vi"
@@ -32,7 +32,7 @@ func OpenInEditor(paths ...string) {
 	cmd := []string{editor}
 	cmd = slices.Concat(cmd, paths)
 
-	SysExec(paths...)
+	return SysExec(cmd...)
 }
 
 // SysExec will check for the existence of the first argument as an
@@ -45,13 +45,16 @@ func OpenInEditor(paths ...string) {
 // with different operating systems.
 // source https://github.com/rwxrob/bonzai/blob/26f59ec373859d31411036b1208de8ac1e37782d/run/run.go#L123-L141
 func SysExec(args ...string) error {
+
 	if len(args) == 0 {
 		return fmt.Errorf("missing name of executable")
 	}
+
 	path, err := exec.LookPath(args[0])
 	if err != nil {
 		return err
 	}
+
 	// exits the program unless there is an error
 	return syscall.Exec(path, args, os.Environ())
 }
